@@ -1,12 +1,12 @@
 "use client"
-import { Button } from "@/components/ui/button";
-import { useConvexAuth } from "convex/react";
-import { ArrowRight } from "lucide-react";
-import { SignInButton } from "@clerk/clerk-react";
-import Image from "next/image";
-import React, { Fragment } from "react";
-import Link from "next/link";
-import Loader from "@/components/ui/loader"
+import { Button } from "@/components/ui/button"
+import Loader from '@/components/ui/loader'
+import { SignInButton } from "@clerk/clerk-react"
+import { useConvexAuth } from "convex/react"
+import { ArrowRight } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
+import { Fragment } from "react"
 
 
 
@@ -20,11 +20,13 @@ const Heroes = () => {
           Write, Plan, Share. With AI at your side
         </h1>
         <h3>
-          Notion is the connected workspace where better, faster work happwens
+          Notion is the connected workspace where better, faster work happens
         </h3>
         
         
-        {isLoading && <Loader size={"lg"} />}
+        {isLoading && <div className='w-full flex items-center justify-center'>
+           <Loader size={"lg"}  />
+          </div>}
 
         {isAuthenticated && !isLoading && (
           <>
