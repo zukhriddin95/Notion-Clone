@@ -1,4 +1,5 @@
 import { v } from "convex/values"
+import { Id } from './_generated/dataModel'
 import { mutation, query } from "./_generated/server"
 
 export const createDocument = mutation({
@@ -80,13 +81,32 @@ export const archive = mutation({
 			
 		}
 
-		const document = await ctx.db.patch(args.id, {
+		const archivedChildren = async (documentId: Id<"documents">) => {
+			const childrens = await ctx.db
+			  .query("documents")
+			  .withIndex("by_user_parent", (q) =>
+				q.eq("userId", userId).eq("parentDocument", documentId)
+			  )
+			  .collect();
+	  
+			for (const child of childrens) {
+			  await ctx.db.patch(child._id, {
+				isArchived: true,
+			  });
+	  
+			  archivedChildren(child._id);
+			}
+		  };
+	  
+		  const document = await ctx.db.patch(args.id, {
 			isArchived: true,
-		})
-
-		return document
-	}
-})
+		  });
+	  
+		  archivedChildren(args.id);
+	  
+		  return document;
+		},
+	  });
 
 export const getTrashDocuments = query({
 	handler: async (ctx) => {
