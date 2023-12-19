@@ -1,14 +1,30 @@
 'use client'
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/components/ui/popover'
+import { Progress } from '@/components/ui/progress'
 import { api } from '@/convex/_generated/api'
 import { cn } from '@/lib/utils'
 import { useMutation } from 'convex/react'
-import { ChevronsLeft, MenuIcon, Plus, Rocket, Search, Settings } from 'lucide-react'
+import {
+	ChevronsLeft,
+	MenuIcon,
+	Plus,
+	Rocket,
+	Search,
+	Settings,
+	Trash,
+} from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { ElementRef, Fragment, useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 import { useMediaQuery } from 'usehooks-ts'
 import DocumentList from './document-list'
 import Item from './item'
+import TrashBox from './trash-box'
 import UserBox from './user-box'
-import { Progress } from '@/components/ui/progress'
 
 const Sidebar = () => {
 	const isMobile = useMediaQuery('(max-width: 770px)')
@@ -18,6 +34,7 @@ const Sidebar = () => {
 	const [isCollapsed, setIsCollapsed] = useState(isMobile)
 	const [isResetting, setIsResetting] = useState(false)
 	const createDocument = useMutation(api.document.createDocument)
+	const router = useRouter()
 
 	useEffect(() => {
 		if (isMobile) {
@@ -80,8 +97,14 @@ const Sidebar = () => {
 	}
 
 	const onCreateDocument = () => {
-		createDocument({
+		const promise = createDocument({
 			title: 'Untitled',
+		}).then((docId) => router.push(`/documents/${docId}`))
+
+		toast.promise(promise, {
+			loading: 'creating a new document . . .',
+			success: 'created a new document . . .',
+			error: 'failed to create a document . . .',
 		})
 	}
 	return (
@@ -115,6 +138,18 @@ const Sidebar = () => {
 				<div className='mt-4'>
 					<DocumentList level={0} />
 					<Item onClick={onCreateDocument} icon={Plus} label='Add a page' />
+
+					<Popover>
+						<PopoverTrigger className='w-full mt-4'>
+							<Item label='Trash' icon={Trash} />
+						</PopoverTrigger>
+						<PopoverContent
+							className='p-0 w-72'
+							side={isMobile ? 'bottom' : 'right'}
+						>
+							<TrashBox />
+						</PopoverContent>
+					</Popover>
 				</div>
 
 				<div
@@ -123,21 +158,21 @@ const Sidebar = () => {
 				/>
 
 				<div className='absolute bottom-0 px-2 bg-white/50 dark:bg-black/50 py-4 w-full'>
-				<div className="flex justify-between items-center">
-				<div className="flex items-center gap-1 text-[13px]">
-                  <Rocket />
-                  <p className="opacity-70 font-bold">Free  plan</p>
-                </div>
-				<p className='text-[13px] opacity-70'>1/3</p>
-				</div>
-				<Progress
-                //   value={
-                //     documents?.length && documents.length >= 3
-                //       ? 100
-                //       : (documents?.length || 0) * 33.33
-                //   }
-                  className="mt-2"
-                />
+					<div className='flex justify-between items-center'>
+						<div className='flex items-center gap-1 text-[13px]'>
+							<Rocket />
+							<p className='opacity-70 font-bold'>Free plan</p>
+						</div>
+						<p className='text-[13px] opacity-70'>1/3</p>
+					</div>
+					<Progress
+						//   value={
+						//     documents?.length && documents.length >= 3
+						//       ? 100
+						//       : (documents?.length || 0) * 33.33
+						//   }
+						className='mt-2'
+					/>
 				</div>
 			</div>
 			<div

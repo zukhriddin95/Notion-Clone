@@ -54,3 +54,59 @@ export const getDocuments= query({
 		return documents
 	}
 })
+
+
+export const archive = mutation({
+	args: {
+		id: v.id("documents")
+	},
+	handler: async (ctx, args) => {
+		const identity = await ctx.auth.getUserIdentity()
+
+		if(!identity) {
+			throw new Error("not authenticated")
+		}
+
+		const userId = identity.subject
+		
+		const existingDocument = await ctx.db.get(args.id)
+
+		if(!existingDocument) {
+			throw new Error("Not Found")
+		}	
+		
+		if(existingDocument.userId !== userId) {
+			throw new Error("Unauthorized")
+			
+		}
+
+		const document = await ctx.db.patch(args.id, {
+			isArchived: true,
+		})
+
+		return document
+	}
+})
+
+export const getTrashDocuments = query({
+	handler: async (ctx) => {
+		const identity = await ctx.auth.getUserIdentity()
+
+		if(!identity) {
+			throw new Error("not authenticated")
+		}
+
+		const userId = identity.subject
+
+		const documents = await ctx.db.query("documents")
+		.withIndex("by_user", q => q.eq("userId",userId))
+		.filter(q => q.eq(q.field("isArchived"), true))
+		
+		.order("desc")
+		.collect()
+		
+		return documents
+	}
+
+
+}) 
